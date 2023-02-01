@@ -19,15 +19,43 @@ class TimersDashboard extends React.Component {
     ],
   };
 
-  // Inside TimersDashboard
   handleCreateFormSubmit = (timer) => {
     this.createTimer(timer);
   };
+
+  handleEditFormSubmit = (attrs) => {
+    this.updateTimer(attrs);
+  };
+
+  handleTrashClick = (timerId) => {
+    this.deleteTimer(timerId);
+  }
 
   createTimer = (timer) => {
     const t = helpers.newTimer(timer);
     this.setState({
       timers: this.state.timers.concat(t),
+    });
+  };
+
+  deleteTimer = (timerId) => {
+    this.setState({
+      timers: this.state.timers.filter(t => t.id !== timerId),
+    });
+  };
+
+  updateTimer = (attrs) => {
+    this.setState({
+      timers: this.state.timers.map((timer) => {
+        if(timer.id === attrs.id) {
+          return Object.assign({}, timer, {
+            title: attrs.title,
+            project: attrs.project,
+          });
+        } else {
+          return timer;
+        }
+      }),
     });
   };
 
@@ -37,6 +65,8 @@ class TimersDashboard extends React.Component {
         <div className='column'>
           <EditableTimerList
             timers={this.state.timers}
+            onFormSubmit={this.handleEditFormSubmit}
+            onTrashClick={this.handleTrashClick}
           />
           {}
           <ToggleableTimerForm
@@ -102,6 +132,8 @@ class EditableTimerList extends React.Component {
         project={timer.project}
         elapsed={timer.elapsed}
         runningSince={timer.runningSince}
+        onFormSubmit={this.props.onFormSubmit}
+        onTrashClick={this.props.onTrashClick}
       />
     ));
     return (
@@ -121,6 +153,10 @@ class EditableTimer extends React.Component {
     this.openForm();
   };
 
+  handleFormClose = () => {
+    this.closeForm();
+  }
+
   handleSubmit = (timer) => {
     this.props.onFormSubmit(timer);
     this.closeForm();
@@ -131,7 +167,7 @@ class EditableTimer extends React.Component {
   };
 
   openForm = () => {
-    this.setState({ editFormOpen: ture });
+    this.setState({ editFormOpen: true });
   };
 
   render() {
@@ -155,6 +191,7 @@ class EditableTimer extends React.Component {
           elapsed={this.props.elapsed}
           runningSince={this.props.runningSince}
           onEditClick={this.handleEditClick}
+          onTrashClick={this.props.onTrashClick}
         />
       );
     }
@@ -162,6 +199,10 @@ class EditableTimer extends React.Component {
 }
 
 class Timer extends React.Component {
+  handleTrashClick = () => {
+    this.props.onTrashClick(this.props.id);
+  };
+
   render() {
     const elapsedString = helpers.renderElapsedString(this.props.elapsed);
     return (
@@ -185,7 +226,10 @@ class Timer extends React.Component {
             >
               <i className='edit icon' />
             </span>
-            <span className='right floated trash icon'>
+            <span 
+              className='right floated trash icon'
+              onClick={this.handleTrashClick}
+            >
               <i className='trash icon' />
             </span>
           </div>
@@ -204,7 +248,6 @@ class TimerForm extends React.Component {
     project: this.props.project || '',
   };
 
-
   handleTitleChange = (e) => {
     this.setState({ title: e.target.value });
   };
@@ -212,7 +255,6 @@ class TimerForm extends React.Component {
   handleProjectChange = (e) => {
     this.setState({ project: e.target.value });
   };
-
 
   handleSubmit = () => {
     this.props.onFormSubmit({
@@ -222,11 +264,8 @@ class TimerForm extends React.Component {
     });
   };
 
-
   render() {
-
     const submitText = this.props.id ? 'Update' : 'Create';
-
     return (
       <div className='ui centered card'>
         <div className='content'>
@@ -248,7 +287,6 @@ class TimerForm extends React.Component {
               />
             </div>
             <div className='ui two bottom attached buttons'>
-              {/* leanpub-start-insert */}
               <button
                 className='ui basic blue button'
                 onClick={this.handleSubmit}
@@ -261,7 +299,6 @@ class TimerForm extends React.Component {
               >
                 Cancel
               </button>
-              {}
             </div>
           </div>
         </div>
